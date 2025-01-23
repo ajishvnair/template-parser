@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .container { 
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .role {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{title}}</h1>
+            <p>User: {{user.name}}</p>
+            <p class="role">Role: {{user.role}}</p>
+        </div>
+    </div>
+</body>
+</html>
