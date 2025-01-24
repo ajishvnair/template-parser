@@ -46,7 +46,7 @@ export async function handler(event: APIGatewayProxyEvent): Promise<LambdaRespon
         }
 
         // Handle GET requests for assets
-        if (event.httpMethod === 'GET' && path && path !== '/') {
+        if (event.httpMethod === 'GET' && path && path.includes('assets')) {
             const assetKey = path.startsWith('/') ? path.slice(1) : path;
             const asset = await s3.getObject({
                 Bucket: CONFIG.BUCKET_NAME,
@@ -63,33 +63,39 @@ export async function handler(event: APIGatewayProxyEvent): Promise<LambdaRespon
             };
         }
         
-        if (!event.body) {
-            throw new Error('Missing request body');
+        if (event.httpMethod === 'GET' && event.queryStringParameters) {
+            const templateKey = event.queryStringParameters.templateKey;
+            const variables = event.queryStringParameters.variables
+                ? JSON.parse(event.queryStringParameters.variables)
+                : {};
+
+            if (!templateKey) {
+                throw new Error('Missing templateKey in query parameters');
+            }
+
+            let template = cache.get(templateKey);
+
+            if (!template) {
+                const content = await getTemplate(templateKey);
+                TemplateValidator.validate(content);
+                template = Handlebars.compile(content);
+                cache.set(templateKey, template);
+            }
+
+            const html = template(variables);
+
+            return {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': 'text/html',
+                    'Content-Security-Policy': "default-src 'self'",
+                    'X-Content-Type-Options': 'nosniff'
+                },
+                body: html
+            };
         }
 
-        const request = RequestSchema.parse(JSON.parse(event.body));
-        let template = cache.get(request.templateKey);
-
-        console.log(request);
-
-        if (!template) {
-            const content = await getTemplate(request.templateKey);
-            TemplateValidator.validate(content);
-            template = Handlebars.compile(content);
-            cache.set(request.templateKey, template);
-        }
-
-        const html = template(request.variables);
-
-        return {
-            statusCode: 200,
-            headers: {
-                'Content-Type': 'text/html',
-                'Content-Security-Policy': "default-src 'self'",
-                'X-Content-Type-Options': 'nosniff'
-            },
-            body: html
-        };
+        throw new Error('Unsupported HTTP method or missing parameters');
 
     } catch (error: any) {
         console.error('Error:', error);
