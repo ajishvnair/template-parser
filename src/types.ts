@@ -10,5 +10,6 @@ export type LambdaRequest = z.infer<typeof RequestSchema>;
 export interface LambdaResponse {
     statusCode: number;
     headers: Record<string, string>;
-    body: string;
+    body: string | undefined;
+    isBase64Encoded?: boolean;
 }
