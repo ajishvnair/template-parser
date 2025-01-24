@@ -32,6 +32,24 @@ async function getTemplate(key: string): Promise<string> {
 
 export async function handler(event: APIGatewayProxyEvent): Promise<LambdaResponse> {
     try {
+        // handling assets
+        if (event.path && event.path !== '/') {
+            const assetKey = event.path.startsWith('/') ? event.path.slice(1) : event.path;
+            const asset = await s3.getObject({
+                Bucket: CONFIG.BUCKET_NAME,
+                Key: assetKey
+            }).promise();
+
+            return {
+                statusCode: 200,
+                headers: {
+                    'Content-Type': asset.ContentType || 'application/octet-stream'
+                },
+                body: asset.Body?.toString('base64'),
+                isBase64Encoded: true
+            };
+        }
+        
         if (!event.body) {
             throw new Error('Missing request body');
         }
