@@ -32,9 +32,22 @@ async function getTemplate(key: string): Promise<string> {
 
 export async function handler(event: APIGatewayProxyEvent): Promise<LambdaResponse> {
     try {
-        // handling assets
-        if (event.path && event.path !== '/') {
-            const assetKey = event.path.startsWith('/') ? event.path.slice(1) : event.path;
+        const path = event.rawPath || event.path;
+
+        // Handle favicon.ico requests explicitly
+        if (path === '/favicon.ico') {
+            return {
+                statusCode: 204, // No content
+                headers: {
+                    'Content-Type': 'image/x-icon',
+                },
+                body: '', // No body for favicon
+            };
+        }
+
+        // Handle GET requests for assets
+        if (event.httpMethod === 'GET' && path && path !== '/') {
+            const assetKey = path.startsWith('/') ? path.slice(1) : path;
             const asset = await s3.getObject({
                 Bucket: CONFIG.BUCKET_NAME,
                 Key: assetKey
