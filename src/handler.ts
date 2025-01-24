@@ -65,9 +65,13 @@ export async function handler(event: APIGatewayProxyEvent): Promise<LambdaRespon
         
         if (event.httpMethod === 'GET' && event.queryStringParameters) {
             const templateKey = event.queryStringParameters.templateKey;
-            const variables = event.queryStringParameters.variables
-                ? JSON.parse(event.queryStringParameters.variables)
-                : {};
+            const variables = {
+                title: event.queryStringParameters?.title || '',
+                user: {
+                    name: event.queryStringParameters?.name || '',
+                    role: event.queryStringParameters?.role || ''
+                }
+            };
 
             if (!templateKey) {
                 throw new Error('Missing templateKey in query parameters');
