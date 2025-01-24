@@ -14,4 +14,12 @@ async function test() {
     console.log(result);
 }
 
+async function testAsset() {
+    const assetEvent = {
+        path: '/assets/google.png'
+    };
+    console.log(await handler(assetEvent as any));
+}
+
 test();
+testAsset();
